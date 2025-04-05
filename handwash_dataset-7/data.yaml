@@ -1,0 +1,17 @@
+names:
+- step_1
+- step_2
+- step_3
+- step_4
+- step_5
+- step_6
+nc: 6
+roboflow:
+  license: CC BY 4.0
+  project: handwash_dataset
+  url: https://universe.roboflow.com/handwash-x8aqn/handwash_dataset/dataset/7
+  version: 7
+  workspace: handwash-x8aqn
+test: ../test/images
+train: ../train/images
+val: ../valid/images
