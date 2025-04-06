@@ -7,7 +7,7 @@ from collections import defaultdict
 
 
 model_path = "yolov8n.pt"
-required_steps = {'step_2', 'step_3', 'step_4', 'step_5', 'step_6'} # Removed step_1 cause it was never detecting
+required_steps = {'step_1', 'step_2', 'step_3', 'step_4', 'step_5', 'step_6'}
 confidence_threshold = 0.45
 frame_threshold = 3
 success_time = 20
@@ -29,23 +29,27 @@ def gen_frames():
         if not success:
             break
 
-        results = model.predict([frame], conf=confidence_threshold, verbose=False)[0]
+        results = model.predict([frame], conf=0.20, verbose=False)[0]
 
         for box in results.boxes:
             cls_id = int(box.cls[0])
             label = model.names[cls_id]
             conf = float(box.conf[0])
 
-            if label in required_steps and conf >= confidence_threshold:
+            if label == "step_1" and conf >= 0.20:
                 label_frame_counts[label] += 1
+            elif label in required_steps and conf >= confidence_threshold:
+                label_frame_counts[label] += 1
+            else:
+                continue
 
-                if label_frame_counts[label] == frame_threshold:
-                    if label not in detected_steps:
-                        logging.info(f"Detected: {label} ({conf:.2f})")
-                        detected_steps.add(label)
+            if label_frame_counts[label] == frame_threshold:
+                if label not in detected_steps:
+                    logging.info(f"Detected: {label} ({conf:.2f})")
+                    detected_steps.add(label)
 
-                    if start_time is None:
-                        start_time = time.time()
+                if start_time is None:
+                    start_time = time.time()
         
         # Check success
         if start_time:
@@ -64,7 +68,7 @@ def gen_frames():
 
 
             else:
-                cv2.putText(frame, f"Steps: {len(detected_steps)}/5 | Time: {int(elapsed_time)}s",
+                cv2.putText(frame, f"Steps: {len(detected_steps)}/6 | Time: {int(elapsed_time)}s",
                             (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
         ret, buffer = cv2.imencode('.jpg', frame)
