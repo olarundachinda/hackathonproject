@@ -7,7 +7,7 @@ from collections import defaultdict
 model = YOLO("yolov8n.pt")
 
 # Define the required steps
-required_steps = {'step_2', 'step_3', 'step_4', 'step_5', 'step_6'} # Removed step_1 cause it was never detecting
+required_steps = {'step_1', 'step_2', 'step_3', 'step_4', 'step_5', 'step_6'}
 detected_steps = set()
 label_frame_counts = defaultdict(int)
 frame_threshold = 3
@@ -27,7 +27,7 @@ while cap.isOpened():
         break
 
     # Make predictions
-    results = model.predict([frame], conf=0.45, verbose=False)[0]
+    results = model.predict([frame], conf=0.20, verbose=False)[0]
 
     # Process detections
     for box in results.boxes:
@@ -35,16 +35,20 @@ while cap.isOpened():
         label = model.names[cls_id]
         conf = float(box.conf[0])
 
-        if label in required_steps and conf >= 0.45:
+        if label == "step_1" and conf >= 0.20:
             label_frame_counts[label] += 1
+        elif label in required_steps and conf >= 0.45:
+            label_frame_counts[label] += 1
+        else:
+            continue
 
-            if label_frame_counts[label] == frame_threshold:
-                if label not in detected_steps:
-                    print(f"Detected: {label} ({conf:.2f})")
-                    detected_steps.add(label)
+        if label_frame_counts[label] == frame_threshold:
+            if label not in detected_steps:
+                print(f"Detected: {label} ({conf:.2f})")
+                detected_steps.add(label)
 
-                if start_time is None:
-                    start_time = time.time()
+            if start_time is None:
+                start_time = time.time()
 
     # show the frame
     cv2.imshow("Handwash Detection", frame)
