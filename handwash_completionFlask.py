@@ -2,12 +2,18 @@ from flask import Flask, render_template, Response
 from ultralytics import YOLO
 import cv2
 import time
+import logging
+
+
+model_path = "yolov8n.pt"
+required_steps = {'step_1', 'step_2', 'step_3', 'step_4', 'step_5', 'step_6'}
+confidence_threshold = 0.45
+success_time = 20
 
 app = Flask(__name__)
+model = YOLO(model_path)
 
-model = YOLO("yolov8n.pt")
-required_steps = {'step_1', 'step_2', 'step_3', 'step_4', 'step_5', 'step_6'}
-
+logging.basicConfig(level=logging.INFO)
 
 def gen_frames():
     cap = cv2.VideoCapture(0)
@@ -20,7 +26,7 @@ def gen_frames():
         if not success:
             break
 
-        results = model.predict(frame, conf=0.45, verbose=False)[0]
+        results = model.predict(frame, conf=confidence_threshold, verbose=False)[0]
 
         for box in results.boxes:
             cls_id = int(box.cls[0])
